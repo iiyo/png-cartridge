@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Date Image Tests</title>
+        <style>
+            .input, .output {
+                min-width: 500px;
+                min-height: 200px;
+            }
+            
+            .result {
+                border: 1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <textarea class="input"></textarea>
+            <textarea class="output"></textarea>
+        </div>
+        <div>
+            <input type="submit" class="submit" value="Convert to image" />
+            <input type="button" class="revert" value="Revert to text" />
+        </div>
+        <div>
+            <img class="result" src="" />
+        </div>
+        <script src="bundle.js"></script>
+    </body>
+</html>

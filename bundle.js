@@ -32,6 +32,7 @@ function dataToImage(data, sourceImage) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var imageSize = Math.ceil(Math.sqrt(encoded.length));
+    var drawn = 0;
     var width = imageSize;
     var height = imageSize;
     
@@ -49,29 +50,22 @@ function dataToImage(data, sourceImage) {
         context.fillRect(0, 0, width, height);
     }
     
-    console.log("width/height:", width, height);
-    
     imageData = context.getImageData(0, 0, width, height);
     context.canvas.width = width;
     context.canvas.height = height;
     pixels = imageData.data;
     
-    console.log("# of pixels:", pixels.length);
-    
-    var lastOffset = 0;
-    
     eachColor(pixels, function (color, offset) {
         
         var encodedColor, random;
         
-        lastOffset = offset;
-        
         if (isDataPixel(color)) {
-            if (encoded.length) {
-                encodedColor = toColor(CHARACTERS.indexOf(encoded.shift()));
+            if (drawn < encoded.length) {
+                encodedColor = toColor(CHARACTERS.indexOf(encoded[drawn]));
                 pixels[offset] = encodedColor[0];
                 pixels[offset + 1] = encodedColor[1];
                 pixels[offset + 2] = encodedColor[2];
+                drawn += 1;
             }
             else {
                 random = Math.round(Math.random() * 64);
@@ -83,9 +77,7 @@ function dataToImage(data, sourceImage) {
         }
     });
     
-    console.log("lastOffset:", lastOffset);
-    
-    if (encoded.length) {
+    if (drawn < encoded.length) {
         throw new Error("Could not fit data inside image!");
     }
     
@@ -179,8 +171,6 @@ function parse() {
     var input = document.querySelector(".input");
     var output = document.querySelector(".output");
     var data = converter.imageToData(image);
-    
-    console.log(data);
     
     output.value = data;
     

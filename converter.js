@@ -31,6 +31,7 @@ function dataToImage(data, sourceImage) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var imageSize = Math.ceil(Math.sqrt(encoded.length));
+    var drawn = 0;
     var width = imageSize;
     var height = imageSize;
     
@@ -58,11 +59,12 @@ function dataToImage(data, sourceImage) {
         var encodedColor, random;
         
         if (isDataPixel(color)) {
-            if (encoded.length) {
-                encodedColor = toColor(CHARACTERS.indexOf(encoded.shift()));
+            if (drawn < encoded.length) {
+                encodedColor = toColor(CHARACTERS.indexOf(encoded[drawn]));
                 pixels[offset] = encodedColor[0];
                 pixels[offset + 1] = encodedColor[1];
                 pixels[offset + 2] = encodedColor[2];
+                drawn += 1;
             }
             else {
                 random = Math.round(Math.random() * 64);
@@ -74,7 +76,7 @@ function dataToImage(data, sourceImage) {
         }
     });
     
-    if (encoded.length) {
+    if (drawn < encoded.length) {
         throw new Error("Could not fit data inside image!");
     }
     

@@ -18,8 +18,6 @@ function parse() {
     var output = document.querySelector(".output");
     var data = converter.imageToData(image);
     
-    console.log(data);
-    
     output.value = data;
     
     if (input.value !== output.value) {

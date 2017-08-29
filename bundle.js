@@ -6,19 +6,6 @@ var btoa = require("btoa");
 
 var CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".split("");
 
-function toColor(v) {
-    return [v, v, v, 255];
-}
-
-function fromColor(color) {
-    
-    if (color[0] !== color[1] || color[1] !== color[2]) {
-        return -1;
-    }
-    
-    return color[0];
-}
-
 function isDataPixel(color) {
     return color[3] === 255;
 }
@@ -39,11 +26,11 @@ function dataToImage(data, sourceImage) {
     document.body.appendChild(canvas);
     
     if (sourceImage) {
-        width = width < sourceImage.width ? sourceImage.width : width;
-        height = height < sourceImage.height ? sourceImage.height : height;
+        width = sourceImage.width;
+        height = sourceImage.height;
         context.canvas.width = width;
         context.canvas.height = height;
-        context.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
+        context.drawImage(sourceImage, 0, 0, width, height);
     }
     else {
         context.fillStyle = "black";
@@ -57,21 +44,22 @@ function dataToImage(data, sourceImage) {
     
     eachColor(pixels, function (color, offset) {
         
-        var encodedColor, random;
+        var red, green, blue;
         
         if (isDataPixel(color)) {
             if (drawn < encoded.length) {
-                encodedColor = toColor(CHARACTERS.indexOf(encoded[drawn]));
-                pixels[offset] = encodedColor[0];
-                pixels[offset + 1] = encodedColor[1];
-                pixels[offset + 2] = encodedColor[2];
-                drawn += 1;
+                
+                red = 1 + CHARACTERS.indexOf(encoded[drawn]);
+                green = 1 + CHARACTERS.indexOf(encoded[drawn + 1]);
+                blue = 1 + CHARACTERS.indexOf(encoded[drawn + 2]);
+                
+                pixels[offset] = red;
+                pixels[offset + 1] = green;
+                pixels[offset + 2] = blue;
+                
+                drawn += 3;
             }
             else {
-                random = Math.round(Math.random() * 64);
-                pixels[offset] = random;
-                pixels[offset + 1] = random;
-                pixels[offset + 2] = random;
                 pixels[offset + 3] = 254;
             }
         }
@@ -112,17 +100,18 @@ function imageToData(image) {
     
     eachColor(imageData.data, function (color) {
         
-        var char;
+        var char, i;
         
         if (isDataPixel(color)) {
             
-            char = CHARACTERS[fromColor(color)];
-            
-            if (!char) {
-                throw new Error("Data is corrupted!");
+            for (i = 0; i < 3; i += 1) {
+                
+                char = CHARACTERS[color[i] - 1];
+                
+                if (char) {
+                    data.push(char);
+                }
             }
-            
-            data.push(char);
         }
     });
     

@@ -17,7 +17,7 @@ function dataToImage(data, sourceImage) {
     var encoded = btoa(encodeURIComponent(compressed)).split("");
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
-    var imageSize = Math.ceil(Math.sqrt(encoded.length));
+    var imageSize = Math.ceil(Math.sqrt(encoded.length / 3));
     var drawn = 0;
     var width = imageSize;
     var height = imageSize;
@@ -32,6 +32,8 @@ function dataToImage(data, sourceImage) {
         context.drawImage(sourceImage, 0, 0, width, height);
     }
     else {
+        context.canvas.width = width;
+        context.canvas.height = height;
         context.fillStyle = "black";
         context.fillRect(0, 0, width, height);
     }

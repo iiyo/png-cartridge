@@ -1,95 +1,72 @@
-/* global Buffer */
 
 var pako = require("pako");
 var atob = require("atob");
 var btoa = require("btoa");
 
-var SEPARATOR_COLOR = [255, 0, 0, 255];
-var IGNORE_COLOR = [255, 255, 255, 255];
 var CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".split("");
 
 function toColor(v) {
-    return [0, 0, 150 + v, 255];
+    return [v, v, v, 255];
 }
 
 function fromColor(color) {
     
-    if (color[0] || color[1] || color[3] != 255) {
+    if (color[0] !== color[1] || color[1] !== color[2]) {
         return -1;
     }
     
-    return color[2] - 150;
+    return color[0];
 }
 
-function isSeparator(color) {
-    return (
-        color[0] === SEPARATOR_COLOR[0] &&
-        color[1] === SEPARATOR_COLOR[1] &&
-        color[2] === SEPARATOR_COLOR[2] &&
-        color[3] === SEPARATOR_COLOR[3]
-    );
+function isDataPixel(color) {
+    return color[3] === 255;
 }
 
-function isIgnoreColor(color) {
-    return (
-        color[0] === IGNORE_COLOR[0] &&
-        color[1] === IGNORE_COLOR[1] &&
-        color[2] === IGNORE_COLOR[2] &&
-        color[3] === IGNORE_COLOR[3]
-    );
-}
-
-function dataToImage(data) {
+function dataToImage(data, sourceImage) {
     
-    var result;
-    var lastIndex = 0;
+    var result, pixels, imageData;
     var stringified = JSON.stringify(data);
     var compressed = pako.deflate(stringified, {to: "string"});
     var encoded = btoa(encodeURIComponent(compressed)).split("");
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var imageSize = Math.ceil(Math.sqrt(encoded.length));
-    var imageData = context.createImageData(imageSize, imageSize);
-    var pixels = imageData.data;
-    
-    context.canvas.width = imageSize;
-    context.canvas.height = imageSize;
     
     document.body.appendChild(canvas);
     
-    context.fillStyle = "white";
-    context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    if (sourceImage) {
+        context.drawImage(sourceImage, 0, 0);
+    }
+    else {
+        context.fillStyle = "black";
+        context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    }
     
-    pixels[0] = SEPARATOR_COLOR[0];
-    pixels[1] = SEPARATOR_COLOR[1];
-    pixels[2] = SEPARATOR_COLOR[2];
-    pixels[3] = SEPARATOR_COLOR[3];
+    imageData = context.getImageData(0, 0, imageSize, imageSize);
+    pixels = imageData.data;
+    context.canvas.width = imageSize;
+    context.canvas.height = imageSize;
     
-    encoded.forEach(function (char, i) {
+    eachColor(pixels, function (color, offset) {
         
-        var color;
-        var offset = (i * 4) + 4;
-        var index = CHARACTERS.indexOf(char);
+        var encodedColor;
         
-        if (index >= 0) {
-            color = toColor(index);
+        if (isDataPixel(color)) {
+            if (encoded.length) {
+                encodedColor = toColor(CHARACTERS.indexOf(encoded.shift()));
+                pixels[offset] = encodedColor[0];
+                pixels[offset + 1] = encodedColor[1];
+                pixels[offset + 2] = encodedColor[2];
+            }
+            else {
+                pixels[offset + 3] = 254;
+            }
         }
-        else {
-            color = IGNORE_COLOR;
-        }
-        
-        pixels[offset] = color[0];
-        pixels[offset + 1] = color[1];
-        pixels[offset + 2] = color[2];
-        pixels[offset + 3] = color[3];
-        
-        lastIndex = offset + 3;
     });
     
-    pixels[lastIndex + 1] = SEPARATOR_COLOR[0];
-    pixels[lastIndex + 2] = SEPARATOR_COLOR[1];
-    pixels[lastIndex + 3] = SEPARATOR_COLOR[2];
-    pixels[lastIndex + 4] = SEPARATOR_COLOR[3];
+    if (encoded.length) {
+        throw new Error("Could not fit data inside image!");
+    }
     
     context.putImageData(imageData, 0, 0);
     
@@ -104,8 +81,8 @@ function dataToImage(data) {
 
 function imageToData(image) {
     
-    var imageData, currentData;
-    var dataFields = [];
+    var imageData;
+    var data = [];
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var width = image.width;
@@ -124,45 +101,25 @@ function imageToData(image) {
         
         var char;
         
-        if (!currentData && isSeparator(color)) {
-            console.log("Start of data field.");
-            currentData = [];
-        }
-        else if (currentData && isSeparator(color)) {
-            
-            console.log("End of data field.");
-            
-            currentData = decodeURIComponent(atob(currentData.join("")));
-            currentData = pako.inflate(currentData, {to: "string"});
-            currentData = JSON.parse(currentData);
-            
-            dataFields.push(currentData);
-            
-            currentData = undefined;
-        }
-        else if (currentData) {
-            
-            if (isIgnoreColor(color)) {
-                return;
-            }
+        if (isDataPixel(color)) {
             
             char = CHARACTERS[fromColor(color)];
             
             if (!char) {
-                throw new Error("Data field " + (dataFields.length + 1) + " is corrupted!");
+                throw new Error("Data is corrupted!");
             }
             
-            currentData.push(char);
+            data.push(char);
         }
     });
     
-    if (currentData) {
-        throw new Error("Unclosed data field.");
-    }
+    data = decodeURIComponent(atob(data.join("")));
+    data = pako.inflate(data, {to: "string"});
+    data = JSON.parse(data);
     
     canvas.parentNode.removeChild(canvas);
     
-    return dataFields;
+    return data;
 }
 
 function eachColor(data, fn) {
@@ -170,7 +127,7 @@ function eachColor(data, fn) {
     var i, length;
     
     for (i = 0, length = data.length; i < length; i += 4) {
-        fn([data[i], data[i + 1], data[i + 2], data[i + 3]]);
+        fn([data[i], data[i + 1], data[i + 2], data[i + 3]], i);
     }
     
     return data;

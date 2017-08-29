@@ -19,7 +19,7 @@ function parse() {
     
     console.log(data);
     
-    output.value = data[0];
+    output.value = data;
     
     if (input.value !== output.value) {
         alert("Output does not match input!");

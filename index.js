@@ -1,6 +1,7 @@
 
 var converter = require("./converter");
 var image = document.querySelector(".result");
+var sourceImage = document.querySelector(".source-image");
 var submit = document.querySelector(".submit");
 var revert = document.querySelector(".revert");
 
@@ -8,7 +9,7 @@ function render() {
     
     var input = document.querySelector(".input").value;
     
-    image.src = converter.dataToImage(input).src;
+    image.src = converter.dataToImage(input, sourceImage).src;
 }
 
 function parse() {

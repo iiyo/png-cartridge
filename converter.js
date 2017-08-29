@@ -31,21 +31,27 @@ function dataToImage(data, sourceImage) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var imageSize = Math.ceil(Math.sqrt(encoded.length));
+    var width = imageSize;
+    var height = imageSize;
     
     document.body.appendChild(canvas);
     
     if (sourceImage) {
-        context.drawImage(sourceImage, 0, 0);
+        width = width < sourceImage.width ? sourceImage.width : width;
+        height = height < sourceImage.height ? sourceImage.height : height;
+        context.canvas.width = width;
+        context.canvas.height = height;
+        context.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
     }
     else {
         context.fillStyle = "black";
-        context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+        context.fillRect(0, 0, width, height);
     }
     
-    imageData = context.getImageData(0, 0, imageSize, imageSize);
+    imageData = context.getImageData(0, 0, width, height);
+    context.canvas.width = width;
+    context.canvas.height = height;
     pixels = imageData.data;
-    context.canvas.width = imageSize;
-    context.canvas.height = imageSize;
     
     eachColor(pixels, function (color, offset) {
         

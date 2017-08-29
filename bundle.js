@@ -32,25 +32,39 @@ function dataToImage(data, sourceImage) {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
     var imageSize = Math.ceil(Math.sqrt(encoded.length));
+    var width = imageSize;
+    var height = imageSize;
     
     document.body.appendChild(canvas);
     
     if (sourceImage) {
-        context.drawImage(sourceImage, 0, 0);
+        width = width < sourceImage.width ? sourceImage.width : width;
+        height = height < sourceImage.height ? sourceImage.height : height;
+        context.canvas.width = width;
+        context.canvas.height = height;
+        context.drawImage(sourceImage, 0, 0, sourceImage.width, sourceImage.height);
     }
     else {
         context.fillStyle = "black";
-        context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+        context.fillRect(0, 0, width, height);
     }
     
-    imageData = context.getImageData(0, 0, imageSize, imageSize);
+    console.log("width/height:", width, height);
+    
+    imageData = context.getImageData(0, 0, width, height);
+    context.canvas.width = width;
+    context.canvas.height = height;
     pixels = imageData.data;
-    context.canvas.width = imageSize;
-    context.canvas.height = imageSize;
+    
+    console.log("# of pixels:", pixels.length);
+    
+    var lastOffset = 0;
     
     eachColor(pixels, function (color, offset) {
         
         var encodedColor, random;
+        
+        lastOffset = offset;
         
         if (isDataPixel(color)) {
             if (encoded.length) {
@@ -68,6 +82,8 @@ function dataToImage(data, sourceImage) {
             }
         }
     });
+    
+    console.log("lastOffset:", lastOffset);
     
     if (encoded.length) {
         throw new Error("Could not fit data inside image!");
@@ -147,6 +163,7 @@ module.exports = {
 
 var converter = require("./converter");
 var image = document.querySelector(".result");
+var sourceImage = document.querySelector(".source-image");
 var submit = document.querySelector(".submit");
 var revert = document.querySelector(".revert");
 
@@ -154,7 +171,7 @@ function render() {
     
     var input = document.querySelector(".input").value;
     
-    image.src = converter.dataToImage(input).src;
+    image.src = converter.dataToImage(input, sourceImage).src;
 }
 
 function parse() {

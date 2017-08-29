@@ -49,7 +49,7 @@ function dataToImage(data, sourceImage) {
     
     eachColor(pixels, function (color, offset) {
         
-        var encodedColor;
+        var encodedColor, random;
         
         if (isDataPixel(color)) {
             if (encoded.length) {
@@ -59,6 +59,10 @@ function dataToImage(data, sourceImage) {
                 pixels[offset + 2] = encodedColor[2];
             }
             else {
+                random = Math.round(Math.random() * 64);
+                pixels[offset] = random;
+                pixels[offset + 1] = random;
+                pixels[offset + 2] = random;
                 pixels[offset + 3] = 254;
             }
         }

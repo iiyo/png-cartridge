@@ -1,0 +1,2 @@
+
+window.cartridge = require("./index");

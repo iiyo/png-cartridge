@@ -1,5 +1,5 @@
-
-var cartridge = require("../index");
+/* global cartridge */
+/* eslint-disable no-alert */
 
 var image = document.querySelector(".result");
 var sourceImage = document.querySelector(".source-image");
@@ -69,7 +69,10 @@ function saveJson() {
     setTimeout(parse, 100);
 }
 
-submit.addEventListener("click", render);
+submit.addEventListener("click", function () {
+    render();
+});
+
 plain.addEventListener("click", function () {
     render(true);
 });

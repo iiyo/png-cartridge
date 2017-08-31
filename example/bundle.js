@@ -1,5 +1,85 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
+var cartridge = require("../index");
+
+var image = document.querySelector(".result");
+var sourceImage = document.querySelector(".source-image");
+var submit = document.querySelector(".submit");
+var revert = document.querySelector(".revert");
+var createButton = document.querySelector(".create");
+var compareButton = document.querySelector(".check");
+var fileInput = document.querySelector(".file");
+var downloadLink = document.querySelector(".download");
+
+fileInput.addEventListener("change", function (event) {
+    readFile(event.target.files[0]);
+});
+
+function readFile(file) {
+    
+    var reader = new FileReader();
+    
+    reader.onload = function (event) {
+        image.src = event.target.result;
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+function render() {
+    
+    var input = document.querySelector(".input").value;
+    
+    image.src = cartridge.save(input, sourceImage).src;
+    downloadLink.href = image.src;
+}
+
+function parse() {
+    
+    var output = document.querySelector(".output");
+    var data = cartridge.load(image);
+    
+    data = typeof data !== "string" ? JSON.stringify(data, null, 4) : data;
+    
+    output.value = data;
+}
+
+function check() {
+    
+    var input = document.querySelector(".input");
+    var output = document.querySelector(".output");
+    
+    if (input.value !== output.value) {
+        alert("Output does not match input!");
+    }
+    else {
+        alert("Input and output match!");
+    }
+}
+
+function saveJson() {
+    image.src = cartridge.save({
+        foo: "bar",
+        baz: 23,
+        something: {
+            prop: "???"
+        }
+    }).src;
+    downloadLink.href = image.src;
+    setTimeout(parse, 100);
+}
+
+submit.addEventListener("click", render);
+
+revert.addEventListener("click", function () {
+    parse();
+});
+
+createButton.addEventListener("click", saveJson);
+compareButton.addEventListener("click", check);
+
+},{"../index":2}],2:[function(require,module,exports){
+
 var pako = require("pako");
 var atob = require("atob");
 var btoa = require("btoa");
@@ -138,68 +218,11 @@ function eachColor(data, fn) {
 }
 
 module.exports = {
-    dataToImage: dataToImage,
-    imageToData: imageToData
+    save: dataToImage,
+    load: imageToData
 };
 
-},{"atob":3,"btoa":4,"pako":5}],2:[function(require,module,exports){
-
-var converter = require("./converter");
-var image = document.querySelector(".result");
-var sourceImage = document.querySelector(".source-image");
-var submit = document.querySelector(".submit");
-var revert = document.querySelector(".revert");
-var fileInput = document.querySelector(".file");
-var downloadLink = document.querySelector(".download")
-
-fileInput.addEventListener("change", function (event) {
-    readFile(event.target.files[0]);
-});
-
-function readFile(file) {
-    
-    var reader = new FileReader();
-    
-    reader.onload = function (event) {
-        image.src = event.target.result;
-    };
-    
-    reader.readAsDataURL(file);
-}
-
-function render() {
-    
-    var input = document.querySelector(".input").value;
-    
-    image.src = converter.dataToImage(input, sourceImage).src;
-    downloadLink.href = image.src;
-}
-
-function parse() {
-    
-    var output = document.querySelector(".output");
-    var data = converter.imageToData(image);
-    
-    output.value = data;
-}
-
-function check() {
-    
-    var input = document.querySelector(".input");
-    
-    if (input.value !== output.value) {
-        alert("Output does not match input!");
-    }
-}
-
-submit.addEventListener("click", render);
-
-revert.addEventListener("click", function () {
-    parse();
-    check();
-});
-
-},{"./converter":1}],3:[function(require,module,exports){
+},{"atob":3,"btoa":4,"pako":5}],3:[function(require,module,exports){
 (function (Buffer){
 (function (w) {
   "use strict";
@@ -8983,4 +9006,4 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}]},{},[2]);
+},{}]},{},[1]);

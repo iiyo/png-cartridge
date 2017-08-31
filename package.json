@@ -1,16 +1,37 @@
 {
-  "name": "data-image",
+  "name": "png-cartridge",
   "version": "1.0.0",
-  "description": "",
+  "description": "Use PNG images to save and load JSON",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "J. Steinbeck",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "atob": "^2.0.3",
     "btoa": "^1.1.2",
     "pako": "^1.0.5"
-  }
+  },
+  "directories": {
+    "example": "example"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iiyo/png-cartridge.git"
+  },
+  "keywords": [
+    "png",
+    "cartridges",
+    "save",
+    "load",
+    "storage",
+    "store",
+    "images"
+  ],
+  "bugs": {
+    "url": "https://github.com/iiyo/png-cartridge/issues"
+  },
+  "homepage": "https://github.com/iiyo/png-cartridge#readme"
 }

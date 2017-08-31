@@ -5,6 +5,7 @@ var cartridge = require("../index");
 var image = document.querySelector(".result");
 var sourceImage = document.querySelector(".source-image");
 var submit = document.querySelector(".submit");
+var plain = document.querySelector(".plain");
 var revert = document.querySelector(".revert");
 var createButton = document.querySelector(".create");
 var compareButton = document.querySelector(".check");
@@ -26,11 +27,11 @@ function readFile(file) {
     reader.readAsDataURL(file);
 }
 
-function render() {
+function render(plain) {
     
     var input = document.querySelector(".input").value;
     
-    image.src = cartridge.save(input, sourceImage).src;
+    image.src = cartridge.save(input, !plain ? sourceImage : undefined).src;
     downloadLink.href = image.src;
 }
 
@@ -70,6 +71,9 @@ function saveJson() {
 }
 
 submit.addEventListener("click", render);
+plain.addEventListener("click", function () {
+    render(true);
+});
 
 revert.addEventListener("click", function () {
     parse();

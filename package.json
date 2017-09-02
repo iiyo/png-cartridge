@@ -1,6 +1,6 @@
 {
   "name": "png-cartridge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use PNG images to save and load data",
   "main": "index.js",
   "scripts": {

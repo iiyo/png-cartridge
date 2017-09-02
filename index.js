@@ -67,6 +67,7 @@ function dataToImage(data, sourceImage) {
     });
     
     if (drawn < encoded.length) {
+        cleanUp();
         throw new Error("Could not fit data inside image!");
     }
     
@@ -76,9 +77,13 @@ function dataToImage(data, sourceImage) {
     
     result.src = canvas.toDataURL("image/png");
     
-    canvas.parentNode.removeChild(canvas);
+    cleanUp();
     
     return result;
+    
+    function cleanUp() {
+        canvas.parentNode.removeChild(canvas);
+    }
 }
 
 function imageToData(image) {
@@ -116,11 +121,11 @@ function imageToData(image) {
         }
     });
     
+    canvas.parentNode.removeChild(canvas);
+    
     data = decodeURIComponent(atob(data.join("")));
     data = pako.inflate(data, {to: "string"});
     data = JSON.parse(data);
-    
-    canvas.parentNode.removeChild(canvas);
     
     return data;
 }

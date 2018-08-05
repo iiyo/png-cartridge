@@ -1,147 +1,73 @@
 
-var pako = require("pako");
 var atob = require("atob");
 var btoa = require("btoa");
+var PNG = require("pngjs").PNG;
 
-var CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".split("");
+var utils = require("./utils").create({
+    atob: atob,
+    btoa: btoa,
+    createImage: function (width, height) {
+        return new PNG({
+            width: width,
+            height: height
+        });
+    }
+});
 
-function isDataPixel(color) {
-    return color[3] === 255;
-}
-
-function dataToImage(data, sourceImage) {
+function write(data, sourceImageStream, then) {
     
-    var result, pixels, imageData;
-    var stringified = JSON.stringify(data);
-    var compressed = pako.deflate(stringified, {to: "string"});
-    var encoded = btoa(encodeURIComponent(compressed)).split("");
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    var imageSize = Math.ceil(Math.sqrt(encoded.length / 3));
-    var drawn = 0;
+    var encoded = utils.encodeData(data);
+    var imageSize = utils.calculateSize(encoded);
     var width = imageSize;
     var height = imageSize;
     
-    document.body.appendChild(canvas);
+    then = then ? then : sourceImageStream;
+    sourceImageStream = arguments.length < 3 ? undefined : sourceImageStream;
     
-    if (sourceImage) {
-        width = sourceImage.width;
-        height = sourceImage.height;
-        context.canvas.width = width;
-        context.canvas.height = height;
-        context.drawImage(sourceImage, 0, 0, width, height);
+    if (sourceImageStream) {
+        sourceImageStream.pipe(new PNG()).
+            on('parsed', function () { processPixels(this); }).
+            on("error", then);
     }
     else {
-        context.canvas.width = width;
-        context.canvas.height = height;
-        context.fillStyle = "black";
-        context.fillRect(0, 0, width, height);
+        processPixels(utils.createSourceImage(width, height));
     }
     
-    imageData = context.getImageData(0, 0, width, height);
-    context.canvas.width = width;
-    context.canvas.height = height;
-    pixels = imageData.data;
-    
-    eachColor(pixels, function (color, offset) {
+    function processPixels(image) {
         
-        var red, green, blue;
-        
-        if (isDataPixel(color)) {
-            if (drawn < encoded.length) {
-                
-                red = 1 + CHARACTERS.indexOf(encoded[drawn]);
-                green = 1 + CHARACTERS.indexOf(encoded[drawn + 1]);
-                blue = 1 + CHARACTERS.indexOf(encoded[drawn + 2]);
-                
-                pixels[offset] = red;
-                pixels[offset + 1] = green;
-                pixels[offset + 2] = blue;
-                
-                drawn += 3;
-            }
-            else {
-                pixels[offset + 3] = 254;
-            }
+        try {
+            utils.writeEncodedDataToPixelArray(encoded, image.data);
         }
-    });
-    
-    if (drawn < encoded.length) {
-        cleanUp();
-        throw new Error("Could not fit data inside image!");
+        catch (error) {
+            then(error);
+            return;
+        }
+        
+        then(null, image.pack());
     }
     
-    context.putImageData(imageData, 0, 0);
-    
-    result = new Image();
-    
-    result.src = canvas.toDataURL("image/png");
-    
-    cleanUp();
-    
-    return result;
-    
-    function cleanUp() {
-        canvas.parentNode.removeChild(canvas);
-    }
 }
 
-function imageToData(image) {
+function read(inputStream, then) {
     
-    var imageData;
-    var data = [];
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    var width = image.width;
-    var height = image.height;
-    
-    context.canvas.width = width;
-    context.canvas.height = height;
-    
-    document.body.appendChild(canvas);
-    
-    context.drawImage(image, 0, 0);
-    
-    imageData = context.getImageData(0, 0, width, height);
-    
-    eachColor(imageData.data, function (color) {
+    inputStream.pipe(new PNG()).on("parsed", function (imageData) {
         
-        var char, i;
+        var data;
         
-        if (isDataPixel(color)) {
-            
-            for (i = 0; i < 3; i += 1) {
-                
-                char = CHARACTERS[color[i] - 1];
-                
-                if (char) {
-                    data.push(char);
-                }
-            }
+        try {
+            data = utils.readFromPixelArray(imageData);
         }
+        catch (error) {
+            then(error);
+            return;
+        }
+        
+        then(null, data);
     });
     
-    canvas.parentNode.removeChild(canvas);
-    
-    data = decodeURIComponent(atob(data.join("")));
-    data = pako.inflate(data, {to: "string"});
-    data = JSON.parse(data);
-    
-    return data;
-}
-
-function eachColor(data, fn) {
-    
-    var i, length;
-    
-    for (i = 0, length = data.length; i < length; i += 4) {
-        fn([data[i], data[i + 1], data[i + 2], data[i + 3]], i);
-    }
-    
-    return data;
 }
 
 module.exports = {
-    save: dataToImage,
-    load: imageToData
+    write: write,
+    read: read
 };

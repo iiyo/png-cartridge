@@ -1,2 +1,2 @@
 
-window.cartridge = require("./index");
+window.cartridge = require("./browser");

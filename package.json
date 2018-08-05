@@ -1,22 +1,30 @@
 {
   "name": "png-cartridge",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Use PNG images to save and load data",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bundle": "browserify global.js > dist/bundle.js && uglifyjs dist/bundle.js > dist/bundle.min.js"
   },
   "author": "J. Steinbeck",
   "license": "BSD-3-Clause",
   "dependencies": {
     "atob": "^2.0.3",
     "btoa": "^1.1.2",
-    "pako": "^1.0.5"
+    "pako": "^1.0.5",
+    "pngjs": "^3.3.3"
   },
   "directories": {
     "example": "example"
   },
-  "devDependencies": {},
+  "bin": {
+    "cartridge": "./bin/cli.js"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.2",
+    "uglify-js": "^3.4.6"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/iiyo/png-cartridge.git"

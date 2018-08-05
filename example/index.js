@@ -28,16 +28,29 @@ function readFile(file) {
 
 function render(plain) {
     
+    var dataImage;
     var input = document.querySelector(".input").value;
     
-    image.src = cartridge.save(input, !plain ? sourceImage : undefined).src;
+    console.time("write");
+    
+    dataImage = cartridge.writeImage(input, !plain ? sourceImage : undefined);
+    
+    console.timeEnd("write");
+    
+    image.src = dataImage.src;
     downloadLink.href = image.src;
 }
 
 function parse() {
     
+    var data;
     var output = document.querySelector(".output");
-    var data = cartridge.load(image);
+    
+    console.time("read");
+    
+    data = cartridge.readImage(image);
+    
+    console.timeEnd("read");
     
     data = typeof data !== "string" ? JSON.stringify(data, null, 4) : data;
     
@@ -58,27 +71,37 @@ function check() {
 }
 
 function saveJson() {
-    image.src = cartridge.save({
+    
+    var dataImage = cartridge.writeImage({
         foo: "bar",
         baz: 23,
         something: {
             prop: "???"
         }
-    }).src;
+    }, sourceImage);
+    
+    image.src = dataImage.src;
     downloadLink.href = image.src;
+    
     setTimeout(parse, 100);
 }
 
 submit.addEventListener("click", function () {
-    render();
+    setTimeout(function () {
+        render();
+    }, 0);
 });
 
 plain.addEventListener("click", function () {
-    render(true);
+    setTimeout(function () {
+        render(true);
+    }, 0);
 });
 
 revert.addEventListener("click", function () {
-    parse();
+    setTimeout(function () {
+        parse();
+    }, 0);
 });
 
 createButton.addEventListener("click", saveJson);
